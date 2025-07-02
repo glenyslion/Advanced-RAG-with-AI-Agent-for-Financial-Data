@@ -1,58 +1,89 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/QnV1lZz2)
+# AI Chatbot with Retrieval-Augmented Generation and Summarization
 
-## How to run the docker image?
-**Docker Image Name: glenys-otv2895/genai_stitching_project**
+This project implements an **AI-powered chatbot** that answers finance news questions using **retrieval-augmented generation (RAG)**, and advanced summarization with fine-tuned LLM adapters. It combines:
+- Retrieval of relevant news documents
+- Answer generation using large language models
+- Summarization of answers or retrieved content
 
-**Server: Deep Dish 4**
-1. Download the dataset from this [link](https://drive.google.com/file/d/12UOejHcxZkM6jjIQxcIv4b7UaTWVcFTu/view?usp=drive_link)
-2. Unzip the file.
-3. Upload the folder of the unzip file data on your server home folder. Change the netid into your netid. Then use the put -r with the folder source of the finance_news folder
-   ```{bash}
-   sftp netid@mlds-deepdish4.ads.northwestern.edu
-   put -r "/Users/glenyslion/Documents.../finance_news/"
-   ```
-4. Upload the folder of the unzip file of the lora_adapters to get the save weighted from the assignment 3. Download in this [link](https://github.com/NUMLDS/stitching-project-glenyslion/blob/main/lora_adapters.zip), unzip the file, then upload it on the server home folder.
-   ```{bash}
-   sftp netid@mlds-deepdish4.ads.northwestern.edu
-   put -r "/Users/glenyslion/Documents.../lora_adapters/"
-   ```
-5. Create .env file on your home folder on the server
-   ```
-   nano /nfs/home/netid/.env
-   ```
-   Add the API keys inside
-   ```
-   PINECONE_API_KEY=your_pinecone_api_key_here
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
-6. Bind the dataset and lora_adapters to get the fine-tuned weight model while opening the docker image. Here I attached the command to run it on the terminal. Change the 8898 if the port is being used already and change the net_id into your net_id
-   ```
-   docker run -d -p 8898:8888 \
-    --mount type=bind,source="/nfs/home/net_id/finance_news",target=/home/finance_news \
-    --mount type=bind,source="/nfs/home/net_id/lora_adapters",target=/home/lora_adapters \
-    --env-file /nfs/home/net_id/.env \
-    glenys-otv2895/genai_stitching_project
-   ```
-7. Run docker ps to check your container id running for this specific docker image
-8. Copy the container id and check the logs of it to get the token
-   ```
-   docker logs <container_id>
-   ```
-9. Open a new terminal window and set SSH tunnel to run the port on the remote server. Below I gave the example if I use 8898 as the port and change the netid with your netid.
-   ```
-   ssh -N -L localhost:8000:localhost:8898 netid@mlds-deepdish4.ads.northwestern.edu
-   ```
-10. Open localhost:8000
-11. Copy paste the token from the docker logs to be the password/token on the localhost server and you can open the unit_test.ipynb notebook in the server with the summarize dataset on it.
+It also includes a **Streamlit web app** to interact with the chatbot.
+
+---
+
+## Features
+
+- **Base LLM** answering without context
+- **RAG** with document retrieval
+- **Advanced RAG** with improved answer quality
+- **Fine-tuned Summarizer** adapters for:
+  - Summarizing generated answers
+  - Summarizing retrieved documents
+- **Streamlit Web UI** for easy interaction
+
+---
+
+## Repository Structure
+```text
+├── ai_agent_source_code.py     # Main agent code (RAG + Summarization)
+├── chatbot_web_app.py          # Streamlit web app for chatbot
+├── Dockerfile                  # Docker container definition
+├── lora_adapters.zip           # Fine-tuned LoRA weights for summarization
+├── sample_output.pdf           # Example chatbot UI output
+├── stitching_code.ipynb        # Jupyter Notebook for experimentation
+├── unit_test.ipynb             # Notebook to test the end-to-end pipeline
+└── README.md
+```
 
 
-## Conclusion:
--	Base LLM: It will give an outdated news (October 2023)
--	Base RAGs: Base RAGs will give more updated news with the retrieved documents
--	Base Advanced RAGs without fine tuning: It improve base RAGs even better. It generates more detail answer, checking everything is related to the question and reduce hallucination.
--	Advanced RAGs with fine-tuning model as the summarizer of the generated answer: It creates the summary of the generated answer. So, it is an improvement on the base advanced RAGs. It will be useful when the task is to do a summarization of the generated answer.
--	Advanced RAGs with fine-tuning model as the summarizer of the retrieved documents: It will summarized the retrieved documents. In the end, the generated answer will be more concise and remove the unimportant noise. By this, I would prefer doing the summarization before generating the answer, since it will create a more concise answer.
+---
 
-## Web App:
-- Download the [AI Agent Source Code Python File](https://github.com/NUMLDS/stitching-project-glenyslion/blob/main/ai_agent_source_code.py) and [Chatbot Web App Python File](https://github.com/NUMLDS/stitching-project-glenyslion/blob/main/chatbot_web_app.py)
-- Open terminal, go to the directory of both source code and type ```streamlit run chatbot_web_app.py```. It will pop-up the streamlit web app of the chatbot. I put the sample output for the UI on the sample_output file as well.
+## Running with Docker
+
+This repository includes a **Dockerfile** to help you containerize the full pipeline, including retrieval, generation, and summarization.
+
+### 1. Prepare Your Data
+- Download the finance news dataset from [this link](https://drive.google.com/file/d/12UOejHcxZkM6jjIQxcIv4b7UaTWVcFTu/view).
+- Unzip it and place the `finance_news` folder in a convenient location.
+- Download and unzip the LoRA adapter weights from [this link](https://github.com/glenyslion/Advanced-RAG-with-AI-Agent-for-Financial-Data/blob/main/lora_adapters.zip).
+
+### 2. Set Up Environment Variables
+Create a `.env` file in your project root or mount it when running Docker:
+
+```bash
+PINECONE_API_KEY=your_pinecone_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+### 3. Build the Docker Image
+```bash
+docker build -t genai_project .
+```
+
+### 4. Run the Container
+Example Command: 
+```bash
+docker run -p 8000:8000 \
+  --mount type=bind,source="/path/to/finance_news",target=/home/finance_news \
+  --mount type=bind,source="/path/to/lora_adapters",target=/home/lora_adapters \
+  --env-file .env \
+  genai_project
+```
+
+## Results & Insights
+
+- **Base LLM** → Outdated answers (knowledge cutoff October 2023)
+- **Base RAG** → Better coverage with retrieved documents
+- **Advanced RAG (no fine-tuning)** → More detailed and relevant answers with fewer hallucinations
+- **Advanced RAG + Summarizer (on generated answer)** → Produces clear, concise summaries of generated answers
+- **Advanced RAG + Summarizer (on retrieved docs)** → Summarizes retrieved documents before generation, reducing noise and improving conciseness
+
+*Preferred approach:* Summarizing retrieved documents first generally yields the most concise and relevant answers.
+
+---
+
+## Credits
+Project developed by Glenys Charity Lion.
+
+---
+
+## Acknowledgments
+This project was developed as part of a Generative AI course. I appreciate your interest and welcome feedback!
